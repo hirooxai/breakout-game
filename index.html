@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Breakout Keyboard</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="shell" aria-label="ブロック崩しゲーム">
+      <header class="hud" aria-label="ゲーム情報">
+        <div>
+          <span class="label">SCORE</span>
+          <strong id="score">0</strong>
+        </div>
+        <div>
+          <span class="label">LEVEL</span>
+          <strong id="level">1</strong>
+        </div>
+        <div>
+          <span class="label">LIVES</span>
+          <strong id="lives">3</strong>
+        </div>
+        <div>
+          <span class="label">POWER</span>
+          <strong id="power">-</strong>
+        </div>
+      </header>
+
+      <canvas id="game" width="960" height="620" tabindex="0" aria-label="矢印キーでパドル移動、スペースで開始、Xでミサイル、Pで一時停止"></canvas>
+
+      <footer class="controls" aria-label="操作方法">
+        <span>← → / A D</span>
+        <span>SPACE</span>
+        <span>X / ENTER</span>
+        <span>P</span>
+        <span>R</span>
+      </footer>
+
+      <nav class="touch-controls" aria-label="スマートフォン操作">
+        <button type="button" data-action="start">START</button>
+        <button type="button" data-action="fire">FIRE</button>
+        <button type="button" data-action="pause">PAUSE</button>
+        <button type="button" data-action="restart">RESET</button>
+      </nav>
+    </main>
+
+    <script src="./game.js"></script>
+  </body>
+</html>
