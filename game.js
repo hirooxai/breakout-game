@@ -156,14 +156,19 @@ function launchBall() {
 
   for (const ball of balls) {
     if (!ball.stuck) continue;
-    const angle = (Math.random() * 0.35 + 0.66) * Math.PI;
-    const direction = Math.random() > 0.5 ? 1 : -1;
-    ball.vx = Math.cos(angle) * state.baseBallSpeed * direction;
+    const angle = randomLaunchAngle();
+    ball.vx = Math.cos(angle) * state.baseBallSpeed;
     ball.vy = -Math.sin(angle) * state.baseBallSpeed;
     ball.stuck = false;
   }
 
   state.mode = "playing";
+}
+
+function randomLaunchAngle() {
+  const minAngle = Math.PI * 0.31;
+  const maxAngle = Math.PI * 0.69;
+  return minAngle + Math.random() * (maxAngle - minAngle);
 }
 
 function togglePause() {
@@ -696,6 +701,7 @@ window.addEventListener("keydown", (event) => {
 
   if (event.code === "Space") {
     if (state.mode === "ready") launchBall();
+    else if (state.mode === "playing") fireMissiles();
     if (state.mode === "gameover") restart();
   }
 
