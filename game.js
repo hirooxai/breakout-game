@@ -5,6 +5,8 @@ const levelEl = document.querySelector("#level");
 const livesEl = document.querySelector("#lives");
 const powerEl = document.querySelector("#power");
 const touchControls = document.querySelector(".touch-controls");
+const titleImage = new Image();
+titleImage.src = "./block_start_image1.png";
 
 const keys = new Set();
 const pointer = {
@@ -16,7 +18,7 @@ const state = {
   score: 0,
   level: 1,
   lives: 3,
-  mode: "ready",
+  mode: "title",
   lastTime: 0,
   shake: 0,
   baseBallSpeed: 420,
@@ -163,6 +165,30 @@ function launchBall() {
   }
 
   state.mode = "playing";
+}
+
+function startGame() {
+  state.score = 0;
+  state.level = 1;
+  state.lives = 3;
+  state.baseBallSpeed = 420;
+  clearTemporaryPower();
+  updateHud();
+  resetLevel();
+  launchBall();
+}
+
+function showTitle() {
+  state.score = 0;
+  state.level = 1;
+  state.lives = 3;
+  state.baseBallSpeed = 420;
+  state.mode = "title";
+  items = [];
+  missiles = [];
+  clearTemporaryPower();
+  updateHud();
+  resetLevel();
 }
 
 function randomLaunchAngle() {
@@ -477,6 +503,12 @@ function draw() {
   ctx.save();
   ctx.clearRect(0, 0, world.width, world.height);
 
+  if (state.mode === "title") {
+    drawTitleScreen();
+    ctx.restore();
+    return;
+  }
+
   if (state.shake > 0) {
     ctx.translate((Math.random() - 0.5) * state.shake, (Math.random() - 0.5) * state.shake);
     state.shake *= 0.82;
@@ -492,6 +524,38 @@ function draw() {
   drawOverlay();
 
   ctx.restore();
+}
+
+function drawTitleScreen() {
+  ctx.fillStyle = "#000000";
+  ctx.fillRect(0, 0, world.width, world.height);
+
+  if (titleImage.complete && titleImage.naturalWidth > 0) {
+    const imageRatio = titleImage.naturalWidth / titleImage.naturalHeight;
+    const canvasRatio = world.width / world.height;
+    let drawWidth = world.width;
+    let drawHeight = world.height;
+
+    if (imageRatio > canvasRatio) {
+      drawHeight = world.width / imageRatio;
+    } else {
+      drawWidth = world.height * imageRatio;
+    }
+
+    const x = (world.width - drawWidth) / 2;
+    const y = (world.height - drawHeight) / 2;
+    ctx.drawImage(titleImage, x, y, drawWidth, drawHeight);
+    return;
+  }
+
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = "#f3f1ea";
+  ctx.font = "800 48px system-ui, sans-serif";
+  ctx.fillText("未知ブロックとの遭遇", world.width / 2, world.height / 2 - 24);
+  ctx.fillStyle = "#a7adb5";
+  ctx.font = "700 22px system-ui, sans-serif";
+  ctx.fillText("何か押すとスタート", world.width / 2, world.height / 2 + 34);
 }
 
 function drawArena() {
@@ -631,7 +695,7 @@ function drawOverlay() {
   const messages = {
     ready: ["SPACE", "スタート"],
     paused: ["PAUSED", "Pで再開"],
-    gameover: ["GAME OVER", "Rでリスタート"],
+    gameover: ["GAME OVER", "何か押すとタイトルへ"],
     level: ["CLEAR", "次のレベルへ"],
   };
 
@@ -675,14 +739,7 @@ function clamp(value, min, max) {
 }
 
 function restart() {
-  state.score = 0;
-  state.level = 1;
-  state.lives = 3;
-  state.mode = "ready";
-  state.baseBallSpeed = 420;
-  clearTemporaryPower();
-  updateHud();
-  resetLevel();
+  showTitle();
 }
 
 function frame(time) {
@@ -697,12 +754,23 @@ window.addEventListener("keydown", (event) => {
   const handled = ["ArrowLeft", "ArrowRight", "KeyA", "KeyD", "Space", "KeyP", "KeyR", "KeyX", "Enter"].includes(event.code);
   if (handled) event.preventDefault();
 
+  if (state.mode === "title") {
+    event.preventDefault();
+    startGame();
+    return;
+  }
+
+  if (state.mode === "gameover") {
+    event.preventDefault();
+    showTitle();
+    return;
+  }
+
   keys.add(event.code);
 
   if (event.code === "Space") {
     if (state.mode === "ready") launchBall();
     else if (state.mode === "playing") fireMissiles();
-    if (state.mode === "gameover") restart();
   }
 
   if (event.code === "KeyX" || event.code === "Enter") {
@@ -734,10 +802,12 @@ canvas.addEventListener("pointerdown", (event) => {
   canvas.setPointerCapture(event.pointerId);
   setPointerFromEvent(event);
 
-  if (state.mode === "ready") {
+  if (state.mode === "title") {
+    startGame();
+  } else if (state.mode === "ready") {
     launchBall();
   } else if (state.mode === "gameover") {
-    restart();
+    showTitle();
   }
 });
 
@@ -764,9 +834,18 @@ if (touchControls) {
 
     canvas.focus();
     const action = button.dataset.action;
+    if (state.mode === "title") {
+      startGame();
+      return;
+    }
+
+    if (state.mode === "gameover") {
+      showTitle();
+      return;
+    }
+
     if (action === "start") {
       if (state.mode === "ready") launchBall();
-      else if (state.mode === "gameover") restart();
     }
     if (action === "fire") fireMissiles();
     if (action === "pause") togglePause();
@@ -775,6 +854,7 @@ if (touchControls) {
 }
 
 window.addEventListener("load", () => canvas.focus());
+titleImage.addEventListener("load", draw);
 
 restart();
 requestAnimationFrame(frame);
